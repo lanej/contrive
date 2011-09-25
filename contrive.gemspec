@@ -6,7 +6,7 @@ Gem::Specification.new do |gem|
   gem.email         = ["jlane@engineyard.com"]
   gem.description   = %q{Cook up anything, any way you like}
   gem.summary       = %q{Tree-based framework for dependency resolution}
-  gem.homepage      = ""
+  gem.homepage      = "http://github.com/lanej/contrive"
 
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.files         = `git ls-files`.split("\n")
