@@ -1,10 +1,12 @@
 require "contrive/version"
 
 module Contrive
+  def self.resolve(model)
+    Contrive::Action.resolve(model)
+  end
   class Action
-    attr_reader :produces
-    def produce(model)
-      @produces = model
+    def self.reset!
+      @actions = []
     end
     def self.actions
       @actions ||= []
@@ -13,10 +15,18 @@ module Contrive
       actions << Contrive::Action.new.tap{|ac| ac.instance_eval(&block)}
     end
     def self.resolve(produce)
-      actions.detect{|action| action.produces.keys.first == produce}.create_resolution(produce)
+      resolution, answer = actions.detect{|action| action.produces.keys.first == produce}.create_resolution(produce)
+      Contrive::Model.new(answer)
+    end
+
+    attr_reader :produces
+    def produce(model)
+      @produces = model
     end
     def create_resolution(model)
-      resolutions.find{|resolution| resolution.call(model)}
+      answer = nil
+      resolution = resolutions.find{|resolution| answer = resolution.call(model)}
+      [resolution, answer]
     end
     def resolutions
       @resolutions ||= []
@@ -25,8 +35,13 @@ module Contrive
       resolutions << block
     end
   end
-  
-  def self.resolve(model)
-    Contrive::Action.resolve(model)
+  class Model
+    attr_reader :type, :attributes
+    def initialize(hash)
+      @type, @attributes = hash.keys.first, hash[hash.keys.first]
+    end
+    def [](key)
+      attributes[key]
+    end
   end
 end
