@@ -29,8 +29,8 @@ module Contrive
       model = {model => {}} if model.is_a?(Symbol)
       @produces = Contrive::Model.new(model)
     end
-    def demand(model)
-      unresolved_demands << model
+    def demand(*models)
+      unresolved_demands.concat(models)
     end
     def unresolved_demands
       @unresolved_demands ||= []
