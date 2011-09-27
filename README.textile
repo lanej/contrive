@@ -2,8 +2,8 @@
 
 h3. Resolve your favorite dependency, just the way you like it
 
-bc.. 
-	Contrive::Action.build do
+bc..
+  Contrive::Action.build do
     demand :husband
     demand :wife
     produce :marriage

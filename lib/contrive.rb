@@ -2,11 +2,18 @@ require "contrive/version"
 
 module Contrive
   def self.resolve(model)
+    model = model.new if model.is_a?(Class)
     Contrive::Action.resolve(model)
+  end
+  def self.build(&block)
+    Contrive::Action.build(&block)
   end
   class Action
     def self.reset!
       @actions = []
+    end
+    def resolve(model)
+      Contrive.resolve(model)
     end
     def self.actions
       @actions ||= []
@@ -15,19 +22,19 @@ module Contrive
       actions << Contrive::Action.new.tap{|ac| ac.instance_eval(&block)}
     end
     def self.resolve(produce)
-      matching_actions = actions.select{|action| action.produces.type == produce}
+      matching_actions = actions.select{|action| action.produces.complement_to?(produce)}
       answer = nil
       matching_actions.detect do |action|
-        action.unresolved_demands.each{|demand| action.resolve_demand(demand, Contrive::Action.resolve(demand))}
-        resolution, answer = action.create_resolution(produce)
+        action.unresolved_demands.each{|demand| action.resolve_demand(demand, Contrive.resolve(demand))}
+        resolution, answer = action.create_resolution(action.produces)
       end
-      Contrive::Model.new(answer)
+      answer
     end
 
     attr_reader :produces, :demands
     def produce(model)
-      model = {model => {}} if model.is_a?(Symbol)
-      @produces = Contrive::Model.new(model)
+      model = model.new if model.is_a?(Class)
+      @produces = model
     end
     def demand(*models)
       unresolved_demands.concat(models)
@@ -49,15 +56,57 @@ module Contrive
     def resolutions
       @resolutions ||= []
     end
-    def resolve(&block)
+    def create(&block)
       resolutions << block
     end
   end
-  class Model < Hash
-    attr_reader :type, :attributes
-    def initialize(hash)
-      @type = hash.keys.first
-      self.merge!(hash[hash.keys.first])
+  module Model
+    def self.reset!
+      decendants.each{|decendant| Object.send(:remove_const, decendant.to_s.to_sym)}
+      @decendants = []
+    end
+    def self.decendants
+      @decendants ||= []
+    end
+    def self.included(klass)
+      decendants << klass
+      class << klass
+        def attributes
+          @attributes ||= []
+        end
+        def property(name)
+          attributes << name
+        end
+      end
+      klass.class_eval do
+        extend Forwardable
+        def_delegators :@attributes, :[], :[]=, :keys, :key?, :inject
+        
+        def initialize(attributes={})
+          @attributes = attributes
+        end
+        
+        def attributes
+          @attributes || {}
+        end
+        
+        def method_missing(method, *args, &block)
+          if key?(method)
+            self[method]
+          else
+            raise "undefined method #{method}"
+          end
+        end
+
+        def complement_to?(request)
+          self.kind_of?(request.class) && request.inject(true){|r,(k,v)| r &= (self[k] === v)}
+        end
+        
+        def ===(request)
+          request = self[request] unless request.is_a?(Model)
+          complement_to?(request)
+        end
+      end
     end
   end
 end
