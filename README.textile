@@ -2,31 +2,30 @@
 
 h3. Resolve your favorite dependency, just the way you like it
 
-bc..
-  Contrive::Action.build do
-    demand :husband
-    demand :wife
-    produce :marriage
+bc..  
+	Contrive::Action.build do
+	  demand :husband
+	  demand :wife
+	  produce :marriage
 
-    resolve do |model|
-      {:marriage => {:wife => demands[:wife], :husband => demands[:husband]}}
-    end
-  end
-  Contrive::Action.build do
-    produce :husband
-    resolve do |model|
-      {:husband => {:name => "bob"}}
-    end
-  end
-  Contrive::Action.build do
-    produce :wife
-    resolve do |model|
-      {:wife => {:name => "barb"}}
-    end
-  end
-
-  marriage = Contrive.resolve(:marriage)
-  marriage[:husband][:name].should eql "bob"
-  marriage[:wife][:name].should eql "barb"
+	  resolve do |model|
+	    {:marriage => {:wife => demands[:wife], :husband => demands[:husband]}}
+	  end
+	end
+	Contrive::Action.build do
+	  produce :husband
+	  resolve do |model|
+	    {:husband => {:name => "bob"}}
+	  end
+	end
+	Contrive::Action.build do
+	  produce :wife
+	  resolve do |model|
+	    {:wife => {:name => "barb"}}
+	  end
+	end
+	marriage = Contrive.resolve(:marriage)
+	marriage[:husband][:name].should eql "bob"
+	marriage[:wife][:name].should eql "barb"
 
 p. lovely
