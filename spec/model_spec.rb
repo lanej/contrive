@@ -21,5 +21,12 @@ describe Contrive::Model do
       request = Donor.new(:type => "b")
       applicant.should_not be_a_complement_to request
     end
+    it "should complement application with additonal model" do
+      class Donor; include Contrive::Model; end
+      class Bank; include Contrive::Model; end
+      application = Donor.new(:bank => Bank.new) 
+      request = Donor.new(:type => "b", :bank => Bank.new(:name => "hughey"))
+      application.should be_a_complement_to request
+    end
   end
 end

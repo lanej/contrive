@@ -56,9 +56,8 @@ describe Contrive do
 
     Contrive.build do
       produce Marriage.new(:wife => Wife.new, :husband => Husband.new)
-
-      create do |model|
-        Marriage.new(:wife => resolve(Wife.new), :husband => resolve(Husband.new))
+      create do |marriage|
+        Marriage.new(:wife => resolve(marriage.wife), :husband => resolve(marriage.husband))
       end
     end
     Contrive.build do
@@ -91,7 +90,24 @@ describe Contrive do
       create {|donor| Donor.new(:name => "frank", :type => "b")}
     end
     donor = Contrive.resolve(Donor.new(:type => "b"))
+    donor.should_not be_nil
     donor.type.should eql "b"
     donor.name.should eql "frank"
+  end
+  it "should resolve nested resources" do
+    class Donor; include Contrive::Model; end
+    class Bank; include Contrive::Model; end
+    Contrive.build do
+      produce Donor.new(:bank => Bank.new)
+      create {|donor| Donor.new(:bank => resolve(donor.bank))}
+    end
+    Contrive.build do
+      produce Bank.new
+      create {|bank| bank.merge(:location => "austin")}
+    end
+    donor = Contrive.resolve(Donor.new(:type => "b", :bank => Bank.new(:name => "hughey")))
+    donor.should_not be_nil
+    donor.bank.name.should eql "hughey"
+    donor.bank.location.should eql "austin"
   end
 end

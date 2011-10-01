@@ -1,7 +1,7 @@
 module Contrive
   module ModelExt
     extend Forwardable
-    def_delegators :@attributes, :[], :[]=, :keys, :key?, :inject
+    def_delegators :@attributes, :[], :[]=, :keys, :key?, :inject, :to_hash
 
     def initialize(attributes={})
       @attributes = attributes
@@ -18,9 +18,13 @@ module Contrive
         raise "undefined method #{method}"
       end
     end
+    
+    def merge(hash_or_model)
+      self.class.new(self.attributes.dup).tap{|copy| copy.attributes.merge!(hash_or_model)}
+    end
 
     def complement_to?(request)
-      self.kind_of?(request.class) && request.inject(true){|r,(k,v)| r &= (self[k] === v)}
+      self.kind_of?(request.class) && request.inject(true){|r,(k,v)| r &= (!self.key?(k) || self[k] === v)}
     end
 
     def ===(request)
