@@ -1,5 +1,6 @@
 module Contrive
   class Action
+    class InvalidResolution < Exception; end
     def self.reset!
       @actions = []
     end
@@ -14,6 +15,7 @@ module Contrive
       answer = nil
       matching_actions.detect do |action|
         resolution, answer = action.create_resolution(action.produces.merge(produce))
+        fail(InvalidResolution) unless answer.complement_to?(produce)
       end
       answer
     end

@@ -44,15 +44,9 @@ describe Contrive do
     team.captain.name.should eql "bob"
   end
   it "should compose multiple demands" do
-    class Marriage
-      include Contrive::Model
-    end
-    class Wife
-      include Contrive::Model
-    end
-    class Husband
-      include Contrive::Model
-    end
+    class Marriage; include Contrive::Model; end
+    class Wife; include Contrive::Model; end
+    class Husband; include Contrive::Model; end
 
     Contrive.build do
       produce Marriage.new(:wife => Wife.new, :husband => Husband.new)
@@ -109,5 +103,14 @@ describe Contrive do
     donor.should_not be_nil
     donor.bank.name.should eql "hughey"
     donor.bank.location.should eql "austin"
+  end
+  it "should fail on misbehaving action" do
+    class Donor; include Contrive::Model; end
+    class Bank; include Contrive::Model; end
+    Contrive.build do
+      produce Donor.new(:type => "a")
+      create {|donor| Donor.new(:type => "b")}
+    end
+    lambda {Contrive.resolve(Donor.new(:type => "a"))}.should raise_exception
   end
 end
